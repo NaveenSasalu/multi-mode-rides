@@ -7,6 +7,19 @@ const RouteDetails = ({ driveData, transitData }) => {
   const driveLeg = driveData.routes[0].legs[0];
   const transitLeg = transitData.routes[0].legs[0];
 
+  // Inside RouteDetails.jsx
+  const getIcon = (mode) => {
+    if (mode.includes("DRIVING")) return "🚗";
+    if (mode.includes("WALKING")) return "🚶";
+    if (mode.includes("BICYCLING")) return "🚲";
+    return "🏁";
+  };
+
+  // Use it in your header
+  <h3 style={{ color: "#1a73e8" }}>
+    {getIcon(driveData.routes[0].legs[0].steps[0].travel_mode)} First Leg
+  </h3>;
+
   return (
     <div
       className="directions-panel"
@@ -22,7 +35,10 @@ const RouteDetails = ({ driveData, transitData }) => {
 
       {/* 🚗 DRIVING LEG */}
       <div style={{ marginBottom: "20px", borderBottom: "2px solid #1a73e8" }}>
-        <h3 style={{ color: "#1a73e8" }}>🚗 Drive Leg</h3>
+        <h3 style={{ color: "#1a73e8" }}>
+          {getIcon(driveData.routes[0].legs[0].steps[0].travel_mode)} First Leg
+        </h3>
+        ;
         <p>
           <strong>Distance:</strong> {driveLeg.distance.text}
         </p>
@@ -42,7 +58,7 @@ const RouteDetails = ({ driveData, transitData }) => {
 
       {/* 🚉 TRANSIT LEG */}
       <div style={{ marginBottom: "20px", borderBottom: "2px solid #ea4335" }}>
-        <h3 style={{ color: "#ea4335" }}>🚉 Transit Leg</h3>
+        <h3 style={{ color: "#1a73e8" }}>🚉 Transit Leg</h3>;
         <p>
           <strong>Distance:</strong> {transitLeg.distance.text}
         </p>

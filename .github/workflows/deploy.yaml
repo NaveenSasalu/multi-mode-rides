@@ -21,6 +21,8 @@ jobs:
         with:
           context: ./client
           push: true
+          build-args: |
+            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:latest
 
       - name: Build and push Backend

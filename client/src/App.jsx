@@ -6,6 +6,7 @@ import RouteDetails from "./components/RouteDetails";
 
 function App() {
   const [routeData, setRouteData] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
@@ -52,6 +53,19 @@ function App() {
             disableDefaultUI={true} // Cleaner look
             clickableIcons={false}
           >
+            {userLocation && (
+              <Marker
+                position={userLocation}
+                icon={{
+                  path: google.maps.SymbolPath.CIRCLE,
+                  fillColor: "#4285F4",
+                  fillOpacity: 1,
+                  strokeColor: "white",
+                  strokeWeight: 2,
+                  scale: 7,
+                }}
+              />
+            )}
             {routeData?.driveData && (
               <DirectionsRendererComponent
                 data={routeData.driveData}

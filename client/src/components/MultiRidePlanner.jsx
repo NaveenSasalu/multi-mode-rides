@@ -31,6 +31,43 @@ const MultiRidePlanner = ({ onRouteFound }) => {
   const [firstLegMode, setFirstLegMode] = useState("DRIVING"); // Default
   const [loading, setLoading] = useState(false);
 
+  // ... other states ...
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    } else {
+      //alert("Location is supported!");
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        // Call your backend to convert Lat/Lng to an Address (Reverse Geocoding)
+        try {
+          const res = await fetch("/api/geocode", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lat: latitude, lng: longitude }),
+          });
+          const data = await res.json();
+
+          if (data.results && data.results[0]) {
+            setOrigin(data.results[0].formatted_address);
+          }
+        } catch (error) {
+          console.error("Geocoding failed", error);
+          // Fallback: just use the raw coordinates
+          setOrigin(`${latitude},${longitude}`);
+        }
+      },
+      () => {
+        alert("Unable to retrieve your location");
+      }
+    );
+  };
+
   const handleSearch = async () => {
     setLoading(true);
     try {
@@ -71,12 +108,28 @@ const MultiRidePlanner = ({ onRouteFound }) => {
       <label style={{ fontSize: "12px", fontWeight: "600", color: "#666" }}>
         STARTING POINT
       </label>
-      <input
-        style={inputStyle}
-        value={origin}
-        onChange={(e) => setOrigin(e.target.value)}
-        placeholder="Enter city or address"
-      />
+      <div style={{ position: "relative" }}>
+        <input
+          style={{ ...inputStyle, paddingRight: "40px" }}
+          value={origin}
+          onChange={(e) => setOrigin(e.target.value)}
+        />
+        <button
+          onClick={handleUseCurrentLocation}
+          title="Use my current location"
+          style={{
+            position: "absolute",
+            right: "10px",
+            top: "18px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "18px",
+          }}
+        >
+          🎯
+        </button>
+      </div>
 
       <label
         style={{

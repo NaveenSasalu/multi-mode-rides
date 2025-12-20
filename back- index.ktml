@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Driving + Public Transport Route App</title>
+    <style>
+        /* Basic styling for the map and controls */
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        #controls {
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <h3>Two-Part Route Planner (Driving + Transit)</h3>
+        <div class="input-group">
+            <label for="origin">Start (Driving):</label>
+            <input type="text" id="origin" value="San Francisco, CA" size="40">
+        </div>
+        <div class="input-group">
+            <label for="waypoint">Switchover Point (e.g., Park-and-Ride):</label>
+            <input type="text" id="waypoint" value="Downtown Berkeley Station" size="40">
+        </div>
+        <div class="input-group">
+            <label for="destination">Final Destination (Transit):</label>
+            <input type="text" id="destination" value="Oakland Airport" size="40">
+        </div>
+        <button onclick="calculateAndDisplayRoute()">Get Combined Route</button>
+        <p id="total-info"></p>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        // NOTE: Replace YOUR_API_KEY with your actual key
+        const API_KEY = "YOUR_API_KEY"; 
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=" + API_KEY + "&callback=initMap"></script>
+    
+    <script>
+        let map;
+        let directionsService;
+        let drivingRenderer;
+        let transitRenderer;
+
+        /**
+         * @function initMap
+         * Initializes the map and the core Directions services.
+         * This function is called automatically by the Google Maps API script load.
+         */
+        function initMap() {
+            // 1. Initialize the Map
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 10,
+                center: { lat: 37.7749, lng: -122.4194 } // Centered near San Francisco, for example
+            });
+
+            // 2. Initialize the Core Services
+            directionsService = new google.maps.DirectionsService();
+            
+            // 3. Initialize Renderers (one for each route segment)
+            drivingRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                polylineOptions: { strokeColor: '#007FFF', strokeWeight: 6, strokeOpacity: 0.8 } // Azure/Blue for Driving
+            });
+
+            transitRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                polylineOptions: { strokeColor: '#FF4500', strokeWeight: 6, strokeOpacity: 0.8 } // Orange/Red for Transit
+            });
+            
+            console.log("Map initialized successfully.");
+        }
+
+
+        /**
+         * @function calculateAndDisplayRoute
+         * Main function to take user input, calculate two legs, and display them.
+         */
+        function calculateAndDisplayRoute() {
+            // Get addresses from the input fields
+            const origin = document.getElementById('origin').value;
+            const waypoint = document.getElementById('waypoint').value;
+            const destination = document.getElementById('destination').value;
+            const infoElement = document.getElementById('total-info');
+            
+            // Clear previous info
+            infoElement.textContent = 'Calculating...';
+            
+            // Reset the renderers in case a previous route was drawn
+            drivingRenderer.setDirections({ routes: [] });
+            transitRenderer.setDirections({ routes: [] });
+            
+            let totalDurationSeconds = 0;
+            
+            // --- STEP 1: Calculate DRIVING Leg ---
+            directionsService.route({
+                origin: origin,
+                destination: waypoint,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (response, status) => {
+                if (status === 'OK') {
+                    // Display the driving route
+                    drivingRenderer.setDirections(response);
+                    
+                    // Add duration to total
+                    const drivingLeg = response.routes[0].legs[0];
+                    totalDurationSeconds += drivingLeg.duration.value;
+                    
+                    // Proceed to calculate the transit leg
+                    calculateTransitLeg(waypoint, destination, totalDurationSeconds);
+                } else {
+                    infoElement.textContent = `Driving directions failed: ${status}`;
+                    console.error('Driving directions failed:', status);
+                }
+            });
+        }
+        
+        /**
+         * @function calculateTransitLeg
+         * Calculates the second leg (Transit) and displays the total time.
+         */
+        function calculateTransitLeg(waypoint, destination, initialDuration) {
+             const infoElement = document.getElementById('total-info');
+             let totalDurationSeconds = initialDuration;
+             
+             // --- STEP 2: Calculate TRANSIT Leg ---
+            directionsService.route({
+                origin: waypoint,
+                destination: destination,
+                travelMode: google.maps.TravelMode.TRANSIT
+            }, (response, status) => {
+                if (status === 'OK') {
+                    // Display the transit route
+                    transitRenderer.setDirections(response);
+                    
+                    // Add duration to total
+                    const transitLeg = response.routes[0].legs[0];
+                    totalDurationSeconds += transitLeg.duration.value;
+                    
+                    // Convert total duration to a readable format
+                    const totalHours = Math.floor(totalDurationSeconds / 3600);
+                    const totalMinutes = Math.floor((totalDurationSeconds % 3600) / 60);
+                    
+                    // Display total information
+                    infoElement.innerHTML = `✅ **Route Complete!** <br> Total Time: **${totalHours}h ${totalMinutes}m**`;
+                    
+                    console.log('Transit route calculated. Total Duration (seconds):', totalDurationSeconds);
+                    
+                } else {
+                    infoElement.textContent = `Transit directions failed: ${status}`;
+                    console.error('Transit directions failed:', status);
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

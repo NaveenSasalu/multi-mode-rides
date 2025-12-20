@@ -10,11 +10,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set image tag
-        id: vars
-        run: |
-          echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -28,23 +23,11 @@ jobs:
           push: true
           build-args: |
             VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:$TAG
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:1.0.1
 
       - name: Build and push Backend
         uses: docker/build-push-action@v5
         with:
           context: ./server
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-backend:$TAG
-
-      - name: Update deployment image
-        run: |
-          sed -i "s|image: .*|image: $IMAGE_NAME:$TAG|" $DEPLOY_FILE
-
-      - name: Commit & push changes
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add $DEPLOY_FILE
-          git commit -m "Deploy frontend image $TAG"
-          git push
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-backend:latest

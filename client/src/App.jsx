@@ -2,52 +2,89 @@ import React, { useState } from "react";
 import { APIProvider, Map } from "@vis.gl/react-google-maps";
 import MultiRidePlanner from "./components/MultiRidePlanner";
 import DirectionsRendererComponent from "./components/DirectionsRendererComponent";
-import RouteDetails from "./components/RouteDetails"; // <--- NEW IMPORT
+import RouteDetails from "./components/RouteDetails";
 
 function App() {
   const [routeData, setRouteData] = useState(null);
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-      <div style={{ display: "flex", height: "100vh", width: "100vw" }}>
-        {/* LEFT SIDEBAR: Search Input */}
+      <div
+        style={{
+          position: "relative",
+          height: "100vh",
+          width: "100vw",
+          fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif',
+        }}
+      >
+        {/* FLOAT SEARCH PANEL */}
         <div
           style={{
-            width: "300px",
-            padding: "10px",
-            boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            width: "340px",
             zIndex: 10,
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "16px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            padding: "20px",
+            backdropFilter: "blur(8px)",
           }}
         >
+          <h2
+            style={{
+              margin: "0 0 15px 0",
+              fontSize: "1.4rem",
+              color: "#1a73e8",
+            }}
+          >
+            📍 Wayfinder
+          </h2>
           <MultiRidePlanner onRouteFound={(data) => setRouteData(data)} />
         </div>
 
-        {/* CENTER: The Map */}
-        <div style={{ flex: 1, position: "relative" }}>
+        {/* MAP COMPONENT */}
+        <div style={{ height: "100%", width: "100%" }}>
           <Map
             defaultCenter={{ lat: 13.33, lng: 77.11 }}
             defaultZoom={9}
-            gestureHandling={"greedy"}
-            disableDefaultUI={false}
+            disableDefaultUI={true} // Cleaner look
+            clickableIcons={false}
           >
             {routeData?.driveData && (
               <DirectionsRendererComponent
                 data={routeData.driveData}
-                color="#1a73e8"
+                color="#4285F4"
               />
             )}
             {routeData?.transitData && (
               <DirectionsRendererComponent
                 data={routeData.transitData}
-                color="#ea4335"
+                color="#DB4437"
               />
             )}
           </Map>
         </div>
 
-        {/* RIGHT SIDEBAR: Text Directions */}
+        {/* RIGHT SIDEBAR FOR DETAILS */}
         {routeData && (
-          <div style={{ width: "350px", zIndex: 10 }}>
+          <div
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "20px",
+              bottom: "20px",
+              width: "360px",
+              zIndex: 10,
+              background: "#fff",
+              borderRadius: "16px",
+              boxShadow: "-4px 0 15px rgba(0,0,0,0.05)",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <RouteDetails
               driveData={routeData.driveData}
               transitData={routeData.transitData}

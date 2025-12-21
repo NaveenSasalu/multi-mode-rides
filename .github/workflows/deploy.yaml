@@ -23,11 +23,11 @@ jobs:
           push: true
           build-args: |
             VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:1.0.1
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:1.1.1
 
       - name: Build and push Backend
         uses: docker/build-push-action@v5
         with:
           context: ./server
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-backend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-backend:1.0.1

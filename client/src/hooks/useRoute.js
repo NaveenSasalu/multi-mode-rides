@@ -13,7 +13,7 @@ export function useRoute() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/get-route", {
+      const res = await fetch("/api/geocode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ origin, destination, travelMode }),

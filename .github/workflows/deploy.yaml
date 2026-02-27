@@ -1,10 +1,14 @@
-name: Build and Push to Docker Hub
+name: Build & Push Multi-Ride + Update K8s Manifests
+
 on:
   push:
     branches: ["main"]
+    paths:
+      - "client/**"
+      - "server/**"
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,17 +21,42 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./client
           push: true
           build-args: |
             VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:1.1.1
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-frontend:latest
 
       - name: Build and push Backend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./server
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-backend:1.0.1
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-backend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/multi-ride-backend:latest
+
+  update-manifests:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout k-apps repo
+        uses: actions/checkout@v4
+        with:
+          repository: NaveenSasalu/k-apps
+          token: ${{ secrets.K_APPS_TOKEN }}
+
+      - name: Update image tags in deployment manifests
+        run: |
+          sed -i "s#multi-ride-frontend:.*#multi-ride-frontend:${{ github.sha }}#g" multi-ride-maps/deploy-fe.yaml
+          sed -i "s#multi-ride-backend:.*#multi-ride-backend:${{ github.sha }}#g" multi-ride-maps/deploy-be.yaml
+
+      - name: Commit updated manifests
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: "multi-ride-maps/deploy-fe.yaml multi-ride-maps/deploy-be.yaml"
+          message: "ci: update multi-ride images to ${{ github.sha }}"
